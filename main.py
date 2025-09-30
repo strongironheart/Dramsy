@@ -31,22 +31,6 @@ logger = logging.getLogger(ct.LOGGER_NAME)
 
 
 ############################################################
-# 初期化処理
-############################################################
-try:
-    initialize()
-except Exception as e:
-    logger.error(f"{ct.INITIALIZE_ERROR_MESSAGE}\n{e}")
-    st.error(utils.build_error_message(ct.INITIALIZE_ERROR_MESSAGE))
-    st.stop()
-
-# アプリ起動時のログ出力
-if not "initialized" in st.session_state:
-    st.session_state.initialized = True
-    logger.info(ct.APP_BOOT_MESSAGE)
-
-
-############################################################
 # 初期表示
 ############################################################
 # タイトル表示
@@ -57,8 +41,35 @@ with st.sidebar:
 uc.display_initial_ai_message()
 
 # 初期処理
-st.session_state.openai_obj = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-st.session_state.llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.5)
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+    st.session_state.start_flg = False
+    st.session_state.pre_mode = ""
+    st.session_state.shadowing_flg = False
+    st.session_state.shadowing_button_flg = False
+    st.session_state.shadowing_count = 0
+    st.session_state.shadowing_first_flg = True
+    st.session_state.shadowing_audio_input_flg = False
+    st.session_state.shadowing_evaluation_first_flg = True
+    st.session_state.dictation_flg = False
+    st.session_state.dictation_button_flg = False
+    st.session_state.dictation_count = 0
+    st.session_state.dictation_first_flg = True
+    st.session_state.dictation_chat_message = ""
+    st.session_state.dictation_evaluation_first_flg = True
+    st.session_state.chat_open_flg = False
+    st.session_state.problem = ""
+    st.session_state.first_start_done = False
+    
+    st.session_state.openai_obj = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    st.session_state.llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.5)
+    st.session_state.memory = ConversationSummaryBufferMemory(
+        llm=st.session_state.llm,
+        max_token_limit=1000,
+        return_messages=True
+    )      
+#st.session_state.openai_obj = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+#st.session_state.llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.5)
 
 
 
@@ -102,20 +113,20 @@ with st.sidebar:
         st.session_state.start_flg = st.button(ct.START_BUTTON_LABEL, use_container_width=True, type="primary")
 
 ############################################################
-# Whiskyデータの取得・DB保存
+# 初期化処理
 ############################################################
-# DB・テーブルがなければ全件取得して保存
-if not utils.db_exists() or not utils.table_exists():
-    utils.create_whisky_table()
-    whiskies = utils.fetch_whiskies()
-    utils.insert_whiskies(whiskies)
-else:
-    # DB・テーブルがある場合は新規データのみ追加
-    whiskies = utils.fetch_whiskies()
-    utils.insert_new_whiskies(whiskies)
+with st.spinner(ct.SPINNER_INITIALIZE):
+    try:
+        initialize()
+    except Exception as e:
+        logger.error(f"{ct.INITIALIZE_ERROR_MESSAGE}\n{e}")
+        st.error(utils.build_error_message(ct.INITIALIZE_ERROR_MESSAGE))
+        st.stop()
 
-# DBの中身を表示（確認用）
-# utils.display_whisky_db()
+# アプリ起動時のログ出力
+if not "initialized" in st.session_state:
+    st.session_state.initialized = True
+    logger.info(ct.APP_BOOT_MESSAGE)
 
 
 ############################################################
@@ -158,9 +169,9 @@ if chat_message:
             context = "\n".join([doc.page_content for doc in context_docs])
             # print("==============")
             # print(context_docs)
-            print("==============")
-            print(context)
-            print("==============")
+            # print("==============")
+            # print(context)
+            # print("==============")
 
             # ここでプロンプトを作成
             question_answer_prompt = utils.build_question_answer_prompt(context, chat_message)
@@ -192,9 +203,9 @@ if chat_message:
             st.error(utils.build_error_message(ct.LLM_RESPONSE_DISP_ERROR_MESSAGE))
             st.stop()
 
-#     # ==========================================
-#     # 4. 会話ログへの追加
-#     # ==========================================
-#     st.session_state.messages.append({"role": "user", "content": chat_message})
-#     st.session_state.messages.append({"role": "assistant", "content": result})
+    # ==========================================
+    # 4. 会話ログへの追加
+    # ==========================================
+    st.session_state.messages.append({"role": "user", "content": chat_message})
+    st.session_state.messages.append({"role": "assistant", "content": result})
 

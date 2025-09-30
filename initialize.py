@@ -44,9 +44,26 @@ def initialize():
     initialize_session_id()
     # ログ出力の設定
     initialize_logger()
+
+    # DBおよびテーブルの作成
+    initialize_db()
+
     # RAGのRetrieverを作成
     initialize_retriever()
 
+def initialize_session_state():
+    """
+    初期化データの用意
+    """
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+def initialize_session_id():
+    """
+    セッションIDの作成
+    """
+    if "session_id" not in st.session_state:
+        st.session_state.session_id = uuid4().hex
 
 def initialize_logger():
     """
@@ -71,22 +88,22 @@ def initialize_logger():
     logger.setLevel(logging.INFO)
     logger.addHandler(log_handler)
 
-
-def initialize_session_id():
-    """
-    セッションIDの作成
-    """
-    if "session_id" not in st.session_state:
-        st.session_state.session_id = uuid4().hex
-
-
-def initialize_session_state():
-    """
-    初期化データの用意
-    """
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-
+def initialize_db():
+    # DB・テーブルがなければ全件取得して保存
+    if not utils.db_exists():
+        # DBファイルがなければ、DBとテーブルを作成し、全件取得して保存
+        utils.create_whisky_table()
+        whiskies = utils.fetch_whiskies()
+        utils.insert_whiskies(whiskies)
+    elif not utils.table_exists():
+        # DBはあるがテーブルがなければ、テーブル作成して全データを追加
+        utils.create_whisky_table()
+        whiskies = utils.fetch_whiskies()
+        utils.insert_whiskies(whiskies)
+    else:
+        # DB・テーブルがある場合は新規データのみ追加
+        whiskies = utils.fetch_whiskies()
+        utils.insert_new_whiskies(whiskies)
 
 def initialize_retriever():
     """
@@ -98,7 +115,7 @@ def initialize_retriever():
         return
 
     # whisky.dbからデータをロード
-    conn = sqlite3.connect("whisky.db")
+    conn = sqlite3.connect(ct.DB_PATH)
     c = conn.cursor()
     c.execute("""
         SELECT name, published, image_url, type, country, region, distillery, bottler, age, abv, price,

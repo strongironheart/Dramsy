@@ -10,7 +10,7 @@
 # 画面表示系
 # ==========================================
 APP_NAME = "Dramsy - Your Perfect Dram"
-USER_ICON_FILE_PATH = "./images/user_icon.jpg"
+USER_ICON_FILE_PATH = "./images/Dramsy_user_512.png"
 ICON_FILE_PATH = "./images/Dramsy_icon_512.png"
 AI_ICON_FILE_PATH = "./images/Dramsy_bartender_512.png"
 ERROR_ICON = ":material/error:"
@@ -34,6 +34,7 @@ AVAILABLE_HOURS_PER_WEEK_HELPER_TEXT = "1週間で学習に使える時間を入
 
 CHAT_INPUT_HELPER_TEXT = "こちらからに入力してください。"
 SPINNER_TEXT = "レコメンドする商品の検討中..."
+SPINNER_INITIALIZE = "ウイスキーのデータ取得中..."
 WARNING_ICON = ":material/warning:"
 ERROR_ICON = ":material/error:"
 
