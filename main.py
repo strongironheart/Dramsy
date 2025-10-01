@@ -16,6 +16,7 @@ from langchain.memory import ConversationSummaryBufferMemory
 from openai import OpenAI
 from langchain.chat_models import ChatOpenAI
 from langchain_openai import ChatOpenAI
+from langchain.schema import Document
 import os
 
 ############################################################
@@ -43,24 +44,7 @@ uc.display_initial_ai_message()
 # 初期処理
 if "messages" not in st.session_state:
     st.session_state.messages = []
-    st.session_state.start_flg = False
-    st.session_state.pre_mode = ""
-    st.session_state.shadowing_flg = False
-    st.session_state.shadowing_button_flg = False
-    st.session_state.shadowing_count = 0
-    st.session_state.shadowing_first_flg = True
-    st.session_state.shadowing_audio_input_flg = False
-    st.session_state.shadowing_evaluation_first_flg = True
-    st.session_state.dictation_flg = False
-    st.session_state.dictation_button_flg = False
-    st.session_state.dictation_count = 0
-    st.session_state.dictation_first_flg = True
-    st.session_state.dictation_chat_message = ""
-    st.session_state.dictation_evaluation_first_flg = True
-    st.session_state.chat_open_flg = False
-    st.session_state.problem = ""
-    st.session_state.first_start_done = False
-    
+    st.session_state.whisky_loaded = False
     st.session_state.openai_obj = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
     st.session_state.llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.5)
     st.session_state.memory = ConversationSummaryBufferMemory(
@@ -68,10 +52,6 @@ if "messages" not in st.session_state:
         max_token_limit=1000,
         return_messages=True
     )      
-#st.session_state.openai_obj = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-#st.session_state.llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.5)
-
-
 
 with st.sidebar:
     st.markdown("## 設定")
@@ -115,13 +95,12 @@ with st.sidebar:
 ############################################################
 # 初期化処理
 ############################################################
-with st.spinner(ct.SPINNER_INITIALIZE):
-    try:
-        initialize()
-    except Exception as e:
-        logger.error(f"{ct.INITIALIZE_ERROR_MESSAGE}\n{e}")
-        st.error(utils.build_error_message(ct.INITIALIZE_ERROR_MESSAGE))
-        st.stop()
+try:
+    initialize()
+except Exception as e:
+    logger.error(f"{ct.INITIALIZE_ERROR_MESSAGE}\n{e}")
+    st.error(utils.build_error_message(ct.INITIALIZE_ERROR_MESSAGE))
+    st.stop()
 
 # アプリ起動時のログ出力
 if not "initialized" in st.session_state:
@@ -207,5 +186,6 @@ if chat_message:
     # 4. 会話ログへの追加
     # ==========================================
     st.session_state.messages.append({"role": "user", "content": chat_message})
-    st.session_state.messages.append({"role": "assistant", "content": result})
+    st.session_state.messages.append({"role": "assistant", "content": result.content})
+    print(st.session_state.messages)
 
