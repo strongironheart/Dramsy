@@ -18,6 +18,7 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_community.retrievers import BM25Retriever
 from langchain.retrievers import EnsembleRetriever
+from langchain.schema import Document
 import utils
 import constants as ct
 import requests
@@ -38,18 +39,24 @@ def initialize():
     """
     画面読み込み時に実行する初期化処理
     """
-    # 初期化データの用意
-    initialize_session_state()
-    # ログ出力用にセッションIDを生成
-    initialize_session_id()
-    # ログ出力の設定
-    initialize_logger()
+    with st.spinner(ct.SPINNER_INITIALIZE1):
+        # 初期化データの用意
+        initialize_session_state()
+        # ログ出力用にセッションIDを生成
+        initialize_session_id()
+        # ログ出力の設定
+        initialize_logger()
 
     # DBおよびテーブルの作成
-    initialize_db()
+    if not st.session_state.get("whisky_loaded"):
+        with st.spinner(ct.SPINNER_INITIALIZE2):
+            initialize_db()
+            st.session_state.whisky_loaded = True
+
 
     # RAGのRetrieverを作成
-    initialize_retriever()
+    with st.spinner(ct.SPINNER_INITIALIZE3):
+        initialize_retriever()
 
 def initialize_session_state():
     """
@@ -90,13 +97,8 @@ def initialize_logger():
 
 def initialize_db():
     # DB・テーブルがなければ全件取得して保存
-    if not utils.db_exists():
+    if not utils.db_exists() or not utils.table_exists():
         # DBファイルがなければ、DBとテーブルを作成し、全件取得して保存
-        utils.create_whisky_table()
-        whiskies = utils.fetch_whiskies()
-        utils.insert_whiskies(whiskies)
-    elif not utils.table_exists():
-        # DBはあるがテーブルがなければ、テーブル作成して全データを追加
         utils.create_whisky_table()
         whiskies = utils.fetch_whiskies()
         utils.insert_whiskies(whiskies)
@@ -148,11 +150,11 @@ def initialize_retriever():
             f"Rating: {rating_text}\n"
             f"Value for Money: {value_for_money}"
         )
-        docs.append(page_content)
+        docs.append(Document(page_content=page_content))
 
     # embeddingsとpersistentなvectorstoreの作成
     embeddings = OpenAIEmbeddings()
-    db = Chroma.from_texts(
+    db = Chroma.from_documents(
         docs,
         embedding=embeddings,
         persist_directory=ct.CHROMA_DB_DIR  # ← persistent保存先を指定
@@ -161,7 +163,7 @@ def initialize_retriever():
 
     retriever = db.as_retriever(search_kwargs={"k": ct.TOP_K})
 
-    bm25_retriever = BM25Retriever.from_texts(
+    bm25_retriever = BM25Retriever.from_documents(
         docs,
         preprocess_func=utils.preprocess_func,
         k=ct.TOP_K

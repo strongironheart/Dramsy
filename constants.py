@@ -34,7 +34,9 @@ AVAILABLE_HOURS_PER_WEEK_HELPER_TEXT = "1週間で学習に使える時間を入
 
 CHAT_INPUT_HELPER_TEXT = "こちらからに入力してください。"
 SPINNER_TEXT = "レコメンドする商品の検討中..."
-SPINNER_INITIALIZE = "ウイスキーのデータ取得中..."
+SPINNER_INITIALIZE1 = "ウイスキーのデータ取得中...1"
+SPINNER_INITIALIZE2 = "ウイスキーのデータ取得中...2"
+SPINNER_INITIALIZE3 = "ウイスキーのデータ取得中...3"
 WARNING_ICON = ":material/warning:"
 ERROR_ICON = ":material/error:"
 
