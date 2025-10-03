@@ -175,7 +175,7 @@ if chat_message:
     # ==========================================
     with st.chat_message("assistant", avatar=ct.AI_ICON_FILE_PATH):
         try:
-            st.markdown(result.content)
+            st.markdown(result.content, unsafe_allow_html=True)
             logger.info({"message": result})
         except Exception as e:
             logger.error(f"{ct.LLM_RESPONSE_DISP_ERROR_MESSAGE}\n{e}")

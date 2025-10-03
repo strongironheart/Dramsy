@@ -20,7 +20,9 @@ def display_app_title():
     """
     st.markdown(f"# {ct.APP_NAME}")
     with st.sidebar:
-        st.image(ct.ICON_FILE_PATH, width=200)
+        col1, col2, col3 = st.columns([1, 4, 1])
+        with col2:
+            st.image(ct.ICON_FILE_PATH, width=400)
         st.markdown(ct.INITIAL_EXPLANATION_SIDEBAR)
 
 
